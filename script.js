@@ -1,5 +1,4 @@
 window.addEventListener("load", function () {
-  const textInput = document.getElementById("textInput");
   const canvas = document.getElementById("canvas1");
   const ctx = canvas.getContext("2d");
   canvas.width = window.innerWidth;
@@ -21,6 +20,26 @@ window.addEventListener("load", function () {
       this.fontSize = 100;
       this.lineHeight = this.fontSize * 0.8;
       this.maxTextWidth = this.canvasWidth * 0.8;
+      this.textInput = document.getElementById("textInput");
+      this.textInput.addEventListener("keyup", (e) => {
+        if (e.key !== " ") {
+          this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+
+          this.wrapText(e.target.value);
+        }
+      });
+      // particle text
+      this.particles = [];
+      this.gap = 3;
+      this.mouse = {
+        radius: 20000,
+        x: 0,
+        y: 0,
+      };
+      window.addEventListener("mousemove", (e) => {
+        this.mouse.x = e.x;
+        this.mouse.y = e.y;
+      });
     }
     wrapText(text) {
       const gradient = this.context.createLinearGradient(
@@ -38,11 +57,10 @@ window.addEventListener("load", function () {
       this.context.lineWidth = 3;
       this.context.strokeStyle = "white";
       this.context.font = this.fontSize + "px Helvetica";
-      this.context.fillText(text, this.textX, this.textY);
-      this.context.strokeText(text, this.textX, this.textY);
+
       // break multiline text
       let linesArray = [];
-      let words = text.split("");
+      let words = text.split(" ");
       let lineCounter = 0;
       let line = "";
       for (let i = 0; i < words.length; i++) {
@@ -53,15 +71,40 @@ window.addEventListener("load", function () {
         } else {
           line = testLine;
         }
+        linesArray[lineCounter] = line;
       }
+      let textHeight = this.lineHeight * lineCounter;
+      this.textY = this.canvasHeight / 2 - textHeight / 2;
+      linesArray.forEach((el, index) => {
+        this.context.fillText(
+          el,
+          this.textX,
+          this.textY + index * this.lineHeight
+        );
+        this.context.strokeText(
+          el,
+          this.textX,
+          this.textY + index * this.lineHeight
+        );
+      });
+      this.convertToParticles();
     }
-    convertToParticles() {}
+    convertToParticles() {
+      this.particles = [];
+      const pixels = this.context.getImageData(
+        0,
+        0,
+        this.canvasWidth,
+        this.canvasHeight
+      );
+      console.log(pixels);
+    }
     render() {}
   }
 
   const effect = new Effect(ctx, canvas.width, canvas.height);
-  effect.wrapText("Hello");
   console.log(effect);
+  effect.wrapText("Hellow how are you");
 
   function animate() {}
 
