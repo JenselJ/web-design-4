@@ -3,11 +3,35 @@ window.addEventListener("load", function () {
   const ctx = canvas.getContext("2d");
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  console.log(ctx);
 
   class Particle {
-    constructor() {}
-    draw() {}
-    update() {}
+    constructor(effect, x, y, color) {
+      this.effect = effect;
+      this.x = Math.random() * this.effect.canvasWidth;
+      this.y = 0;
+      this.color = color;
+      this.originX = x;
+      this.originY = y;
+      this.size = this.effect.gap;
+      this.dx = 0;
+      this.dy = 0;
+      this.vx = 0;
+      this.vy = 0;
+      this.force = 0;
+      this.angle = 0;
+      this.distance = 0;
+      this.friction = Math.random() * 0.6 + 0.15;
+      this.ease = Math.random() * 0.1 + 0.005;
+    }
+    draw() {
+      this.effect.context.fillStyle = this.color;
+      this.effect.context.fillRect(this.x, this.y, this.size, this.size);
+    }
+    update() {
+      this.x += (this.originX - this.x) * this.ease;
+      this.y += (this.originY - this.y) * this.ease;
+    }
   }
 
   class Effect {
@@ -96,72 +120,39 @@ window.addEventListener("load", function () {
         0,
         this.canvasWidth,
         this.canvasHeight
-      );
-      console.log(pixels);
+      ).data;
+      this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+      for (let y = 0; y < this.canvasHeight; y += this.gap) {
+        for (let x = 0; x < this.canvasWidth; x += this.gap) {
+          const index = (y * this.canvasWidth + x) * 4;
+          const alpha = pixels[index + 3];
+          if (alpha > 0) {
+            const red = pixels[index];
+            const green = pixels[index + 1];
+            const blue = pixels[index + 2];
+            const color = "rgb(" + red + "," + green + "," + blue + ")";
+            this.particles.push(new Particle(this, x, y, color));
+          }
+        }
+      }
+      console.log(this.particles);
     }
-    render() {}
+    render() {
+      this.particles.forEach((particle) => {
+        particle.update();
+        particle.draw();
+      });
+    }
   }
 
   const effect = new Effect(ctx, canvas.width, canvas.height);
-  console.log(effect);
-  effect.wrapText("Hellow how are you");
+  effect.wrapText("Hello how are you");
+  effect.render();
 
-  function animate() {}
-
-  // ctx.lineWidth = 3;
-  // ctx.strokeStyle = "red";
-  // ctx.beginPath();
-  // ctx.moveTo(canvas.width / 2, 0);
-  // ctx.lineTo(canvas.width / 2, canvas.height);
-  // ctx.stroke();
-
-  // ctx.lineWidth = 3;
-  // ctx.strokeStyle = "green";
-  // ctx.beginPath();
-  // ctx.moveTo(0, canvas.height / 2);
-  // ctx.lineTo(canvas.width, canvas.height / 2);
-  // ctx.stroke();
-
-  // const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  // gradient.addColorStop(0.3, "red");
-  // gradient.addColorStop(0.5, "fuchsia");
-  // gradient.addColorStop(0.7, "purple");
-
-  // ctx.fillStyle = gradient;
-  // ctx.strokeStyle = "white";
-
-  // ctx.font = "80px Helvetica";
-  // ctx.textAlign = "center";
-  // ctx.textBaseline = "middle";
-
-  // const maxTextWidth = canvas.width * 0.8;
-  // const lineHeight = 80;
-
-  // function wrapText(text) {
-  // let linesArray = [];
-  // let lineCounter = 0;
-  // let line = "";
-  // let words = text.split(" ");
-  // for (let i = 0; i < words.length; i++) {
-  //   let testLine = line + words[i] + " ";
-  //   if (ctx.measureText(testLine).width > maxTextWidth) {
-  //     line = words[i] + " ";
-  //     lineCounter++;
-  //   } else {
-  //     line = testLine;
-  //   }
-  //   linesArray[lineCounter] = line;
-  // }
-  // let textHeight = lineHeight * lineCounter;
-  // let textY = canvas.height / 2 - textHeight / 2;
-  // linesArray.forEach((el, index) => {
-  //   ctx.fillText(el, canvas.width / 2, textY + index * lineHeight);
-  // });
-  // console.log(linesArray);
-  // }
-
-  // textInput.addEventListener("keyup", function (e) {
-  //   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  //   wrapText(e.target.value);
-  // });
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    effect.render();
+    requestAnimationFrame(animate);
+  }
+  animate();
 });
