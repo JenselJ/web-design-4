@@ -1,15 +1,16 @@
 window.addEventListener("load", function () {
   const canvas = document.getElementById("canvas1");
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", {
+    willReadFrequently: true,
+  });
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-  console.log(ctx);
 
   class Particle {
     constructor(effect, x, y, color) {
       this.effect = effect;
       this.x = Math.random() * this.effect.canvasWidth;
-      this.y = 0;
+      this.y = this.effect.canvasHeight;
       this.color = color;
       this.originX = x;
       this.originY = y;
@@ -29,8 +30,21 @@ window.addEventListener("load", function () {
       this.effect.context.fillRect(this.x, this.y, this.size, this.size);
     }
     update() {
-      this.x += (this.originX - this.x) * this.ease;
-      this.y += (this.originY - this.y) * this.ease;
+      this.dx = this.effect.mouse.x - this.x;
+      this.dy = this.effect.mouse.y - this.y;
+      this.distance = this.dx * this.dx + this.dy * this.dy;
+      this.force = -this.effect.mouse.radius / this.distance;
+
+      if (this.distance < this.effect.mouse.radius) {
+        this.angle = Math.atan2(this.dy, this.dx);
+        this.vx += this.force * Math.cos(this.angle);
+        this.vy += this.force * Math.sin(this.angle);
+      }
+
+      this.x +=
+        (this.vx *= this.friction) + (this.originX - this.x) * this.ease;
+      this.y +=
+        (this.vy *= this.friction) + (this.originY - this.y) * this.ease;
     }
   }
 
@@ -45,6 +59,7 @@ window.addEventListener("load", function () {
       this.lineHeight = this.fontSize * 0.8;
       this.maxTextWidth = this.canvasWidth * 0.8;
       this.textInput = document.getElementById("textInput");
+      this.verticalOffset = 0;
       this.textInput.addEventListener("keyup", (e) => {
         if (e.key !== " ") {
           this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
@@ -79,8 +94,8 @@ window.addEventListener("load", function () {
       this.context.textAlign = "center";
       this.context.textBaseline = "middle";
       this.context.lineWidth = 3;
-      this.context.strokeStyle = "white";
-      this.context.font = this.fontSize + "px Helvetica";
+      // this.context.strokeStyle = "white";
+      this.context.font = this.fontSize + "px Vampiro One";
 
       // break multiline text
       let linesArray = [];
@@ -98,7 +113,7 @@ window.addEventListener("load", function () {
         linesArray[lineCounter] = line;
       }
       let textHeight = this.lineHeight * lineCounter;
-      this.textY = this.canvasHeight / 2 - textHeight / 2;
+      this.textY = this.canvasHeight / 2 - textHeight / 2 + this.verticalOffset;
       linesArray.forEach((el, index) => {
         this.context.fillText(
           el,
@@ -135,7 +150,6 @@ window.addEventListener("load", function () {
           }
         }
       }
-      console.log(this.particles);
     }
     render() {
       this.particles.forEach((particle) => {
@@ -143,10 +157,17 @@ window.addEventListener("load", function () {
         particle.draw();
       });
     }
+    resize(width, height) {
+      canvas.width = width;
+      canvas.height = height;
+      this.textX = this.canvasWidth / 2;
+      this.textY = this.canvasHeight / 2;
+      this.maxTextWidth = this.canvasWidth * 0.8;
+    }
   }
 
   const effect = new Effect(ctx, canvas.width, canvas.height);
-  effect.wrapText("Hello how are you");
+  effect.wrapText("SUSPENSION");
   effect.render();
 
   function animate() {
@@ -155,4 +176,10 @@ window.addEventListener("load", function () {
     requestAnimationFrame(animate);
   }
   animate();
+
+  this.window.addEventListener("resize", function () {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    effect.resize(canvas.width, canvas.height);
+  });
 });
