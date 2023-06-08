@@ -158,8 +158,8 @@ window.addEventListener("load", function () {
       });
     }
     resize(width, height) {
-      canvas.width = width;
-      canvas.height = height;
+      this.canvasWidth = width;
+      this.canvasHeight = height;
       this.textX = this.canvasWidth / 2;
       this.textY = this.canvasHeight / 2;
       this.maxTextWidth = this.canvasWidth * 0.8;
@@ -181,5 +181,6 @@ window.addEventListener("load", function () {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     effect.resize(canvas.width, canvas.height);
+    effect.wrapText(effect.textInput.value);
   });
 });
